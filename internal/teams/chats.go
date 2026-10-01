@@ -10,15 +10,18 @@ import (
 
 // ChatMessage is a plain-text representation of a private chat message.
 type ChatMessage struct {
-	ID                   string     `json:"id"`
-	ChatID               string     `json:"chatId"`
-	ReplyToID            string     `json:"replyToId,omitempty"`
-	Author               string     `json:"author,omitempty"`
-	AuthorID             string     `json:"authorId,omitempty"`
-	CreatedDateTime      time.Time  `json:"createdDateTime"`
-	LastModifiedDateTime *time.Time `json:"lastModifiedDateTime,omitempty"`
-	Text                 string     `json:"text"`
-	WebURL               string     `json:"webUrl,omitempty"`
+	ID                   string       `json:"id"`
+	ChatID               string       `json:"chatId"`
+	ReplyToID            string       `json:"replyToId,omitempty"`
+	Author               string       `json:"author,omitempty"`
+	AuthorID             string       `json:"authorId,omitempty"`
+	CreatedDateTime      time.Time    `json:"createdDateTime"`
+	LastModifiedDateTime *time.Time   `json:"lastModifiedDateTime,omitempty"`
+	Text                 string       `json:"text"`
+	WebURL               string       `json:"webUrl,omitempty"`
+	Attachments          []Attachment `json:"attachments,omitempty"`
+	Mentions             []Mention    `json:"mentions,omitempty"`
+	Reactions            []Reaction   `json:"reactions,omitempty"`
 }
 
 // ListPrivateChats returns the signed-in user's one-to-one and group chats.
@@ -56,14 +59,10 @@ func newChatMessage(m graph.ChatMessage) ChatMessage {
 		ID: m.ID, ChatID: m.ChatID, ReplyToID: m.ReplyToID,
 		CreatedDateTime: m.CreatedDateTime, LastModifiedDateTime: m.LastModifiedDateTime,
 		Text: textutil.BodyToText(m.Body.ContentType, m.Body.Content), WebURL: m.WebURL,
+		Attachments: newAttachments(m.Attachments),
+		Mentions:    newMentions(m.Mentions),
+		Reactions:   newReactions(m.Reactions),
 	}
-	if m.From != nil {
-		for _, id := range []*graph.Identity{m.From.User, m.From.Application, m.From.Device} {
-			if id != nil {
-				out.Author, out.AuthorID = id.DisplayName, id.ID
-				break
-			}
-		}
-	}
+	out.Author, out.AuthorID = identity(m.From)
 	return out
 }

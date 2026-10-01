@@ -44,10 +44,16 @@ func (s *Server) Seed(now time.Time) {
 	deleted := Msg("del", now.Add(-2*day), "Bob", "private endpoints secret")
 	deletedAt := now.Add(-2 * day)
 	deleted.DeletedDateTime = &deletedAt
+	r1 := Msg("r1", now.Add(-2*day), "Bob", "<p>Yes, private endpoints plus DNS zones, <at id=\"0\">Carol</at>.</p>")
+	r1.Mentions = []graph.Mention{{ID: 0, MentionText: "Carol", Mentioned: &graph.MentionedIdentitySet{User: &graph.Identity{ID: "u-Carol", DisplayName: "Carol"}}}}
+	r1.Reactions = []graph.Reaction{
+		{ReactionType: "like", CreatedDateTime: now.Add(-2*day + time.Minute), User: &graph.IdentitySet{User: &graph.Identity{ID: "u-Alice"}}},
+		{ReactionType: "❤️", DisplayName: "Heart", CreatedDateTime: now.Add(-2*day + 2*time.Minute), User: &graph.IdentitySet{User: &graph.Identity{ID: "u-Carol", DisplayName: "Carol"}}},
+	}
 	s.Messages["19:pe@thread.tacv2"] = []graph.ChatMessage{
 		system,
 		Msg("m1", now.Add(-3*day), "Alice", "<p>Should we use <b>Private Endpoints</b> for ACR?</p>",
-			Msg("r1", now.Add(-2*day), "Bob", "<p>Yes, private endpoints plus DNS zones.</p>"),
+			r1,
 			Msg("r2", now.Add(-2*day+time.Hour), "Carol", "<p>Agreed</p>"),
 		),
 		deleted,

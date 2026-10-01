@@ -139,4 +139,15 @@ func TestThread(t *testing.T) {
 	if got := ids(msgs); len(got) != 3 || got[0] != "m1" || got[1] != "r1" || got[2] != "r2" {
 		t.Fatalf("thread got %v", got)
 	}
+	r1 := msgs[1]
+	if len(r1.Mentions) != 1 || r1.Mentions[0] != (Mention{Text: "Carol", Kind: "user", Name: "Carol", ID: "u-Carol"}) {
+		t.Fatalf("unexpected mentions %+v", r1.Mentions)
+	}
+	if len(r1.Reactions) != 2 || r1.Reactions[0].Type != "like" || r1.Reactions[0].UserID != "u-Alice" ||
+		r1.Reactions[1].Type != "❤️" || r1.Reactions[1].DisplayName != "Heart" || r1.Reactions[1].User != "Carol" {
+		t.Fatalf("unexpected reactions %+v", r1.Reactions)
+	}
+	if msgs[0].Reactions != nil || msgs[0].Mentions != nil {
+		t.Fatalf("expected no annotations on m1, got %+v", msgs[0])
+	}
 }

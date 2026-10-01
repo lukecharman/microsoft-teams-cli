@@ -150,11 +150,24 @@ Global flags: `--format json|text` (default `json`), `--client-id`, `--tenant`.
       "createdDateTime": "2026-09-27T10:12:00Z",
       "text": "Should we use private endpoints for ACR?",
       "webUrl": "https://teams.microsoft.com/l/message/…",
-      "replyCount": 2
+      "replyCount": 2,
+      "mentions": [
+        {"text": "Bob", "kind": "user", "name": "Bob Jones", "id": "…"}
+      ],
+      "reactions": [
+        {"type": "like", "user": "Bob Jones", "userId": "…", "createdDateTime": "2026-09-27T10:15:00Z"},
+        {"type": "❤️", "displayName": "Heart", "userId": "…", "createdDateTime": "2026-09-27T10:16:00Z"}
+      ]
     }
   ]
 }
 ```
+
+`mentions`, `reactions` and `attachments` (name, content type and URL;
+not file contents) are included when present, on channel and chat messages.
+Reaction `type` is a legacy name such as `like` or a Unicode emoji; `user` may
+be absent when Graph returns only the reacting user's ID. Reactions are not
+messages and are not matched by `search`.
 
 `type` is `message` for a thread's root post or `reply`; pass `threadId` to
 `teams thread --id` to read the full conversation. `truncated` is `true` when

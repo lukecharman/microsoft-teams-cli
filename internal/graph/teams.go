@@ -58,6 +58,31 @@ type Attachment struct {
 	Name        string `json:"name"`
 }
 
+// MentionedIdentitySet identifies what a mention refers to: a user,
+// application, device, conversation (e.g. a channel) or tag.
+type MentionedIdentitySet struct {
+	User         *Identity `json:"user"`
+	Application  *Identity `json:"application"`
+	Device       *Identity `json:"device"`
+	Conversation *Identity `json:"conversation"`
+	Tag          *Identity `json:"tag"`
+}
+
+// Mention is an @mention within a message body.
+type Mention struct {
+	ID          int                   `json:"id"`
+	MentionText string                `json:"mentionText"`
+	Mentioned   *MentionedIdentitySet `json:"mentioned"`
+}
+
+// Reaction is a reaction (e.g. like or an emoji) to a message.
+type Reaction struct {
+	ReactionType    string       `json:"reactionType"`
+	DisplayName     string       `json:"displayName"`
+	CreatedDateTime time.Time    `json:"createdDateTime"`
+	User            *IdentitySet `json:"user"`
+}
+
 // ChatMessage is a message in a chat or channel.
 type ChatMessage struct {
 	ID                   string        `json:"id"`
@@ -73,6 +98,8 @@ type ChatMessage struct {
 	From                 *IdentitySet  `json:"from"`
 	Body                 ItemBody      `json:"body"`
 	Attachments          []Attachment  `json:"attachments"`
+	Mentions             []Mention     `json:"mentions"`
+	Reactions            []Reaction    `json:"reactions"`
 	Replies              []ChatMessage `json:"replies"`
 }
 

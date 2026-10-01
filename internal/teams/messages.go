@@ -30,6 +30,8 @@ type Message struct {
 	WebURL               string       `json:"webUrl,omitempty"`
 	ReplyCount           *int         `json:"replyCount,omitempty"`
 	Attachments          []Attachment `json:"attachments,omitempty"`
+	Mentions             []Mention    `json:"mentions,omitempty"`
+	Reactions            []Reaction   `json:"reactions,omitempty"`
 }
 
 // Attachment is a simplified message attachment.
@@ -54,6 +56,8 @@ func NewMessage(ch ChannelRef, m graph.ChatMessage, threadID string) Message {
 		Subject:              m.Subject,
 		Text:                 textutil.BodyToText(m.Body.ContentType, m.Body.Content),
 		WebURL:               m.WebURL,
+		Mentions:             newMentions(m.Mentions),
+		Reactions:            newReactions(m.Reactions),
 	}
 	if m.ReplyToID != "" || m.ID != threadID {
 		out.Type = "reply"
@@ -61,20 +65,19 @@ func NewMessage(ch ChannelRef, m graph.ChatMessage, threadID string) Message {
 	if m.Importance != "" && m.Importance != "normal" {
 		out.Importance = m.Importance
 	}
-	if m.From != nil {
-		for _, id := range []*graph.Identity{m.From.User, m.From.Application, m.From.Device} {
-			if id != nil {
-				out.Author, out.AuthorID = id.DisplayName, id.ID
-				break
-			}
-		}
-	}
-	for _, a := range m.Attachments {
+	out.Author, out.AuthorID = identity(m.From)
+	out.Attachments = newAttachments(m.Attachments)
+	return out
+}
+
+func newAttachments(as []graph.Attachment) []Attachment {
+	var out []Attachment
+	for _, a := range as {
 		// Inline message references carry no useful standalone content.
 		if a.ContentType == "messageReference" {
 			continue
 		}
-		out.Attachments = append(out.Attachments, Attachment{Name: a.Name, ContentType: a.ContentType, URL: a.ContentURL})
+		out = append(out, Attachment{Name: a.Name, ContentType: a.ContentType, URL: a.ContentURL})
 	}
 	return out
 }
