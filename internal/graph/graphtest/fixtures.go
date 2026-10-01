@@ -31,6 +31,7 @@ func Msg(id string, t time.Time, author, html string, replies ...graph.ChatMessa
 func (s *Server) Seed(now time.Time) {
 	day := 24 * time.Hour
 	s.Me = graph.User{ID: "me-1", DisplayName: "Test User", UserPrincipalName: "test@example.com"}
+	s.Users["u-Dave"] = graph.User{ID: "u-Dave", DisplayName: "Dave"}
 	s.Teams = []graph.Team{{ID: "team-1", DisplayName: "Platform"}, {ID: "team-2", DisplayName: "Data"}}
 	s.Channels["team-1"] = []graph.Channel{
 		{ID: "19:pe@thread.tacv2", DisplayName: "Platform Engineering", MembershipType: "standard"},
@@ -49,6 +50,8 @@ func (s *Server) Seed(now time.Time) {
 	r1.Reactions = []graph.Reaction{
 		{ReactionType: "like", CreatedDateTime: now.Add(-2*day + time.Minute), User: &graph.IdentitySet{User: &graph.Identity{ID: "u-Alice"}}},
 		{ReactionType: "❤️", DisplayName: "Heart", CreatedDateTime: now.Add(-2*day + 2*time.Minute), User: &graph.IdentitySet{User: &graph.Identity{ID: "u-Carol", DisplayName: "Carol"}}},
+		{ReactionType: "laugh", CreatedDateTime: now.Add(-2*day + 3*time.Minute), User: &graph.IdentitySet{User: &graph.Identity{ID: "u-Dave"}}},
+		{ReactionType: "like", CreatedDateTime: now.Add(-2*day + 4*time.Minute), User: &graph.IdentitySet{User: &graph.Identity{ID: "u-Gone"}}},
 	}
 	s.Messages["19:pe@thread.tacv2"] = []graph.ChatMessage{
 		system,

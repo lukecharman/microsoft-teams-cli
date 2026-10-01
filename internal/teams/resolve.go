@@ -16,6 +16,8 @@ import (
 // Service wraps a Graph client with Teams-specific helpers.
 type Service struct {
 	Graph *graph.Client
+
+	names map[string]string // display names by user ID, cached per run
 }
 
 // ChannelRef identifies a channel together with its parent team.

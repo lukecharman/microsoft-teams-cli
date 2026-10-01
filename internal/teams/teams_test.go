@@ -143,11 +143,68 @@ func TestThread(t *testing.T) {
 	if len(r1.Mentions) != 1 || r1.Mentions[0] != (Mention{Text: "Carol", Kind: "user", Name: "Carol", ID: "u-Carol"}) {
 		t.Fatalf("unexpected mentions %+v", r1.Mentions)
 	}
-	if len(r1.Reactions) != 2 || r1.Reactions[0].Type != "like" || r1.Reactions[0].UserID != "u-Alice" ||
+	if len(r1.Reactions) != 4 || r1.Reactions[0].Type != "like" || r1.Reactions[0].UserID != "u-Alice" || r1.Reactions[0].User != "" ||
 		r1.Reactions[1].Type != "❤️" || r1.Reactions[1].DisplayName != "Heart" || r1.Reactions[1].User != "Carol" {
 		t.Fatalf("unexpected reactions %+v", r1.Reactions)
 	}
 	if msgs[0].Reactions != nil || msgs[0].Mentions != nil {
 		t.Fatalf("expected no annotations on m1, got %+v", msgs[0])
 	}
+}
+
+func TestNameReactors(t *testing.T) {
+	svc, srv := newService(t)
+	ch := ChannelRef{TeamID: "team-1", ChannelID: "19:pe@thread.tacv2"}
+	msgs, err := svc.Thread(context.Background(), ch, "m1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	svc.NameReactors(context.Background(), msgs)
+	var got []string
+	for _, r := range msgs[1].Reactions {
+		got = append(got, r.UserID+"="+r.User)
+	}
+	// Alice is known from authorship, Carol from Graph, Dave by lookup; u-Gone does not exist.
+	if strings.Join(got, ",") != "u-Alice=Alice,u-Carol=Carol,u-Dave=Dave,u-Gone=" {
+		t.Fatalf("unexpected reactor names %v", got)
+	}
+	var lookups []string
+	for _, r := range srv.Requests() {
+		if strings.HasPrefix(r, "/v1.0/users/") {
+			lookups = append(lookups, r)
+		}
+	}
+	if len(lookups) != 2 {
+		t.Fatalf("expected lookups only for u-Dave and u-Gone, got %v", lookups)
+	}
+
+	// Cached names and misses are not looked up again.
+	svc.NameReactors(context.Background(), msgs)
+	if countPrefix(srv.Requests(), "/v1.0/users/") != 2 {
+		t.Fatalf("expected cached lookups, got %v", srv.Requests())
+	}
+}
+
+func TestNameReactorsIgnoresLookupFailure(t *testing.T) {
+	svc, srv := newService(t)
+	ch := ChannelRef{TeamID: "team-1", ChannelID: "19:pe@thread.tacv2"}
+	msgs, err := svc.Thread(context.Background(), ch, "m1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	srv.Close() // every lookup now fails
+	svc.NameReactors(context.Background(), msgs)
+	if r := msgs[1].Reactions; r[0].User != "Alice" || r[2].User != "" || r[2].UserID != "u-Dave" {
+		t.Fatalf("unexpected reactions after failed lookups %+v", r)
+	}
+}
+
+func countPrefix(items []string, prefix string) int {
+	n := 0
+	for _, s := range items {
+		if strings.HasPrefix(s, prefix) {
+			n++
+		}
+	}
+	return n
 }

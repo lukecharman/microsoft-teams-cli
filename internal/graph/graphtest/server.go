@@ -30,6 +30,7 @@ type Server struct {
 	Channels     map[string][]graph.Channel     // by team ID
 	Messages     map[string][]graph.ChatMessage // root messages (with replies) by channel ID
 	ChatMessages map[string][]graph.ChatMessage // messages by chat ID
+	Users        map[string]graph.User          // directory users by ID
 	// Forbidden channel IDs return 403 for message requests.
 	Forbidden map[string]bool
 	// PageSize overrides the page size for message listings (default: $top).
@@ -46,6 +47,7 @@ func New(t *testing.T) *Server {
 		Channels:     map[string][]graph.Channel{},
 		Messages:     map[string][]graph.ChatMessage{},
 		ChatMessages: map[string][]graph.ChatMessage{},
+		Users:        map[string]graph.User{},
 		Forbidden:    map[string]bool{},
 	}
 	s.Server = httptest.NewServer(http.HandlerFunc(s.handle))
@@ -86,6 +88,12 @@ func (s *Server) handle(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, map[string]any{"value": s.Teams})
 	case len(parts) == 2 && parts[0] == "me" && parts[1] == "chats":
 		writeJSON(w, map[string]any{"value": s.Chats})
+	case len(parts) == 2 && parts[0] == "users":
+		if u, ok := s.Users[parts[1]]; ok {
+			writeJSON(w, u)
+			return
+		}
+		writeErr(w, http.StatusNotFound, "Request_ResourceNotFound", "user not found")
 	case len(parts) >= 3 && parts[0] == "chats" && parts[2] == "messages":
 		s.handleChatMessages(w, r, parts[1], parts[3:])
 	case len(parts) == 2 && parts[0] == "teams":

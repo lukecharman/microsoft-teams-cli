@@ -119,6 +119,7 @@ func (a *App) chatMessagesCmd() *cobra.Command {
 			if messages == nil {
 				messages = []teams.ChatMessage{}
 			}
+			svc.NameChatReactors(cmd.Context(), messages)
 			return a.emit(map[string]any{"chatId": chatID, "count": len(messages), "messages": messages}, func(w io.Writer) {
 				for i, message := range messages {
 					if i > 0 {
@@ -262,6 +263,7 @@ func (a *App) runMessages(ctx context.Context, f *messageFlags) error {
 		res.Messages = res.Messages[:f.limit]
 		res.Truncated = true
 	}
+	svc.NameReactors(ctx, res.Messages)
 	res.Count = len(res.Messages)
 	return a.emit(res, func(w io.Writer) { writeMessagesText(w, res.Messages, res.Warnings) })
 }
@@ -332,6 +334,7 @@ func (a *App) threadCmd() *cobra.Command {
 			if msgs == nil {
 				msgs = []teams.Message{}
 			}
+			svc.NameReactors(cmd.Context(), msgs)
 			threadID := id
 			if len(msgs) > 0 {
 				threadID = msgs[0].ThreadID

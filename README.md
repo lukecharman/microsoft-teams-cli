@@ -47,12 +47,13 @@ refreshed silently by later commands. `teams logout` removes them.
 ### Permissions and app registration
 
 The CLI requests these delegated Microsoft Graph permissions:
-`User.Read`, `Team.ReadBasic.All`, `Channel.ReadBasic.All`,
+`User.Read`, `User.ReadBasic.All`, `Team.ReadBasic.All`, `Channel.ReadBasic.All`,
 `ChannelMessage.Read.All`, `ChannelMessage.Send`, `Chat.ReadBasic`, `Chat.Read`,
 and `ChatMessage.Send` (plus `offline_access`).
 `ChannelMessage.Read.All` requires **admin consent** in most tenants.
 `ChannelMessage.Send` is used by `teams post`; admin consent is not generally
 required, though tenant policies can restrict user consent.
+`User.ReadBasic.All` is used to name users who reacted to messages.
 The chat permissions are used by `teams chats`, `teams chat-messages`, and
 `teams chat-post`. Their delegated Graph permissions do not generally require
 admin consent, though tenant consent policies can still require approval.
@@ -156,7 +157,7 @@ Global flags: `--format json|text` (default `json`), `--client-id`, `--tenant`.
       ],
       "reactions": [
         {"type": "like", "user": "Bob Jones", "userId": "…", "createdDateTime": "2026-09-27T10:15:00Z"},
-        {"type": "❤️", "displayName": "Heart", "userId": "…", "createdDateTime": "2026-09-27T10:16:00Z"}
+        {"type": "❤️", "displayName": "Heart", "user": "Carol Smith", "userId": "…", "createdDateTime": "2026-09-27T10:16:00Z"}
       ]
     }
   ]
@@ -165,9 +166,13 @@ Global flags: `--format json|text` (default `json`), `--client-id`, `--tenant`.
 
 `mentions`, `reactions` and `attachments` (name, content type and URL;
 not file contents) are included when present, on channel and chat messages.
-Reaction `type` is a legacy name such as `like` or a Unicode emoji; `user` may
-be absent when Graph returns only the reacting user's ID. Reactions are not
-messages and are not matched by `search`.
+Reaction `type` is a legacy name such as `like` or a Unicode emoji. Graph
+usually returns only the reacting user's ID, so `messages`, `search`, `thread`
+and `chat-messages` fill in `user` from authors and mentions in the results,
+then by looking up remaining IDs (`GET /users/{id}`, needs `User.ReadBasic.All`).
+Lookups are best effort: `user` stays absent for deleted or external accounts,
+or if a lookup fails. Reactions are not messages and are not matched by
+`search`.
 
 `type` is `message` for a thread's root post or `reply`; pass `threadId` to
 `teams thread --id` to read the full conversation. `truncated` is `true` when

@@ -19,6 +19,7 @@ import (
 // MSAL automatically adds openid, profile and offline_access.
 var Scopes = []string{
 	"https://graph.microsoft.com/User.Read",
+	"https://graph.microsoft.com/User.ReadBasic.All",
 	"https://graph.microsoft.com/Team.ReadBasic.All",
 	"https://graph.microsoft.com/Channel.ReadBasic.All",
 	"https://graph.microsoft.com/ChannelMessage.Read.All",

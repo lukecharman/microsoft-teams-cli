@@ -287,3 +287,16 @@ func TestClassifyTimeout(t *testing.T) {
 		t.Fatalf("got %s/%d", info.Code, code)
 	}
 }
+
+func TestThreadNamesReactors(t *testing.T) {
+	srv := seeded(t)
+	code, out, errOut := run(t, srv, "thread", "-c", "Platform Engineering", "--id", "m1")
+	if code != ExitOK {
+		t.Fatalf("exit %d: %s", code, errOut)
+	}
+	for _, want := range []string{`"user": "Alice"`, `"user": "Dave"`, `"userId": "u-Gone"`} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("missing %s in output:\n%s", want, out)
+		}
+	}
+}

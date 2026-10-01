@@ -133,6 +133,13 @@ func (c *Client) Me(ctx context.Context) (User, error) {
 	return u, err
 }
 
+// UserDisplayName looks up a user's display name by directory object ID.
+func (c *Client) UserDisplayName(ctx context.Context, id string) (string, error) {
+	var u User
+	err := c.Get(ctx, "/users/"+url.PathEscape(id), url.Values{"$select": {"id,displayName"}}, &u)
+	return u.DisplayName, err
+}
+
 // JoinedTeams lists the teams the signed-in user is a member of.
 func (c *Client) JoinedTeams(ctx context.Context) ([]Team, error) {
 	return All[Team](ctx, c, "/me/joinedTeams", url.Values{"$select": {"id,displayName,description"}})
